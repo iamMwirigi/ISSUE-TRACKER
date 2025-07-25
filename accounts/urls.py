@@ -12,7 +12,7 @@ urlpatterns = [
     path('users/', UserListView.as_view(), name='list-users'),
     path('api/issues/create/', IssueCreateView.as_view(), name='create-issue'),
 
-    # Project endpoints
+    # Project endpoints with /api/projects/ prefix
     path('api/projects/create/', ProjectCreateView.as_view(), name='create-project'),
     path('api/projects/list/', ProjectListView.as_view(), name='list-projects'),
     path('api/projects/retrieve/', ProjectRetrieveView.as_view(), name='retrieve-project'),
