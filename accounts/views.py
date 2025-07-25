@@ -142,3 +142,72 @@ class IssueCreateView(APIView):
                 'message': 'Issue created successfully.'
             }, status=status.HTTP_201_CREATED)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = ['id', 'name', 'description', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
+class ProjectCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        serializer = ProjectSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'id': serializer.data['id'],
+                'name': serializer.data['name'],
+                'description': serializer.data['description'],
+                'created_at': serializer.data['created_at'],
+                'message': 'Project created successfully.'
+            }, status=status.HTTP_201_CREATED)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        projects = Project.objects.all().values('id', 'name', 'description', 'created_at')
+        return Response(list(projects), status=status.HTTP_200_OK)
+
+class ProjectRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        project_id = request.data.get('id')
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return Response({'detail': 'Project not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProjectSerializer(project)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class ProjectUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        project_id = request.data.get('id')
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return Response({'detail': 'Project not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ProjectSerializer(project, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'id': serializer.data['id'],
+                'name': serializer.data['name'],
+                'description': serializer.data['description'],
+                'created_at': serializer.data['created_at'],
+                'message': 'Project updated successfully.'
+            }, status=status.HTTP_200_OK)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class ProjectDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        project_id = request.data.get('id')
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            return Response({'detail': 'Project not found.'}, status=status.HTTP_404_NOT_FOUND)
+        project.delete()
+        return Response({'message': 'Project deleted successfully.'}, status=status.HTTP_200_OK)
