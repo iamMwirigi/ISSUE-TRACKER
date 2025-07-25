@@ -23,7 +23,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50, unique=True)
     phone_number = models.CharField(max_length=20, unique=True)
-    password_hash = models.CharField(max_length=255)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
@@ -38,8 +37,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.username
 
     def save(self, *args, **kwargs):
-        if self.password and not self.password_hash:
-            self.set_password(self.password)
         super().save(*args, **kwargs)
 
 class Office(models.Model):
