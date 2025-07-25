@@ -102,6 +102,11 @@ class OTPVerifyView(APIView):
             'access': str(refresh.access_token),
         }, status=status.HTTP_200_OK)
 
+class UserListView(APIView):
+    def get(self, request):
+        users = User.objects.all().values('id', 'username', 'phone_number', 'is_admin', 'created_at')
+        return Response(list(users), status=status.HTTP_200_OK)
+
 class UserDeleteView(APIView):
     def post(self, request):
         username = request.data.get('username')
