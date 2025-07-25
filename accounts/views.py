@@ -8,9 +8,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User
+from .models import User, Issue, Project
 import phonenumbers
 from rest_framework import serializers
+from rest_framework.permissions import IsAuthenticated
 
 # In-memory OTP store (for demo; use cache/redis in prod)
 otp_store = {}
@@ -116,3 +117,28 @@ class UserDeleteView(APIView):
             return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
         user.delete()
         return Response({'detail': 'User deleted successfully.'}, status=status.HTTP_200_OK)
+
+class IssueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Issue
+        fields = ['id', 'title', 'description', 'status', 'reporter', 'project', 'assigned_to', 'created_at']
+        read_only_fields = ['id', 'created_at', 'reporter']
+
+class IssueCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = IssueSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(reporter=request.user)
+            return Response({
+                'id': serializer.data['id'],
+                'title': serializer.data['title'],
+                'description': serializer.data['description'],
+                'status': serializer.data['status'],
+                'project': serializer.data['project'],
+                'assigned_to': serializer.data['assigned_to'],
+                'created_at': serializer.data['created_at'],
+                'message': 'Issue created successfully.'
+            }, status=status.HTTP_201_CREATED)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

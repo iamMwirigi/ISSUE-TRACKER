@@ -61,8 +61,8 @@ class Project(models.Model):
 
 class Issue(models.Model):
     STATUS_CHOICES = [
-        ('open', 'Open'),
-        ('closed', 'Closed'),
+        ('solved', 'Solved'),
+        ('unsolved', 'Unsolved'),
     ]
     PRIORITY_CHOICES = [
         ('low', 'Low'),
@@ -72,10 +72,11 @@ class Issue(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True, null=True)
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='open')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='unsolved')
     priority = models.CharField(max_length=50, choices=PRIORITY_CHOICES, default='medium')
     reporter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_issues')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
