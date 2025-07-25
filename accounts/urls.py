@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    LoginView, OTPVerifyView, UserRegistrationView, UserDeleteView, UserListView, IssueCreateView,
+    LoginView, OTPVerifyView, UserRegistrationView, UserDeleteView, UserListView, IssueCreateView, IssueListView,
     ProjectCreateView, ProjectListView, ProjectRetrieveView, ProjectUpdateView, ProjectDeleteView
 )
 
