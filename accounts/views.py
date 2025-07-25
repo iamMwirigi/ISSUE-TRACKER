@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 import phonenumbers
+from rest_framework import serializers
 
 # In-memory OTP store (for demo; use cache/redis in prod)
 otp_store = {}
@@ -38,6 +39,27 @@ def send_otp_sms(phone_number, otp):
     except Exception as e:
         print(f"[SMS ERROR] {e}")
         return False
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+    class Meta:
+        model = User
+        fields = ('username', 'phone_number', 'password')
+
+    def create(self, validated_data):
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
+class UserRegistrationView(APIView):
+    def post(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'detail': 'User created successfully.'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):
     def post(self, request):
