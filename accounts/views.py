@@ -143,6 +143,12 @@ class IssueCreateView(APIView):
             }, status=status.HTTP_201_CREATED)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
+class IssueListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        issues = Issue.objects.all().values('id', 'title', 'description', 'status', 'reporter', 'project', 'assigned_to', 'created_at')
+        return Response(list(issues), status=status.HTTP_200_OK)
+
 class ProjectSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project

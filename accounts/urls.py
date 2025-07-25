@@ -10,12 +10,13 @@ urlpatterns = [
     path('otp-verify/', OTPVerifyView.as_view(), name='otp-verify'),
     path('delete/', UserDeleteView.as_view(), name='delete-user'),
     path('users/', UserListView.as_view(), name='list-users'),
-    path('api/issues/create/', IssueCreateView.as_view(), name='create-issue'),
+    path('issues/create/', IssueCreateView.as_view(), name='create-issue'),
+    path('issues/list/', IssueListView.as_view(), name='list-issues'),
 
-    # Project endpoints with /api/projects/ prefix
-    path('api/projects/create/', ProjectCreateView.as_view(), name='create-project'),
-    path('api/projects/list/', ProjectListView.as_view(), name='list-projects'),
-    path('api/projects/retrieve/', ProjectRetrieveView.as_view(), name='retrieve-project'),
-    path('api/projects/update/', ProjectUpdateView.as_view(), name='update-project'),
-    path('api/projects/delete/', ProjectDeleteView.as_view(), name='delete-project'),
+    # Project endpoints with /projects/ prefix
+    path('projects/create/', ProjectCreateView.as_view(), name='create-project'),
+    path('projects/list/', ProjectListView.as_view(), name='list-projects'),
+    path('projects/retrieve/', ProjectRetrieveView.as_view(), name='retrieve-project'),
+    path('projects/update/', ProjectUpdateView.as_view(), name='update-project'),
+    path('projects/delete/', ProjectDeleteView.as_view(), name='delete-project'),
 ] 
