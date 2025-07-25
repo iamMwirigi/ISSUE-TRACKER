@@ -41,3 +41,45 @@ class User(AbstractBaseUser, PermissionsMixin):
         if self.password and not self.password_hash:
             self.set_password(self.password)
         super().save(*args, **kwargs)
+
+class Office(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    location = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class Project(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    office = models.ForeignKey(Office, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class Issue(models.Model):
+    STATUS_CHOICES = [
+        ('open', 'Open'),
+        ('closed', 'Closed'),
+    ]
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=150)
+    description = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='open')
+    priority = models.CharField(max_length=50, choices=PRIORITY_CHOICES, default='medium')
+    reporter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
