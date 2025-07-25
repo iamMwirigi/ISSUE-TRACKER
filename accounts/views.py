@@ -68,14 +68,13 @@ class LoginView(APIView):
         user = authenticate(request, username=username, password=password)
         if user is None:
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        # Generate OTP
-        otp = ''.join(random.choices(string.digits, k=6))
-        otp_store[user.phone_number] = {'otp': otp, 'timestamp': time.time()}
-        # Send OTP via SMS
-        sent = send_otp_sms(user.phone_number, otp)
-        if not sent:
-            return Response({'detail': 'Failed to send OTP.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        return Response({'detail': 'OTP sent to your phone number.'}, status=status.HTTP_200_OK)
+        # Directly return success or JWT (no OTP)
+        from rest_framework_simplejwt.tokens import RefreshToken
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+        }, status=status.HTTP_200_OK)
 
 class OTPVerifyView(APIView):
     def post(self, request):
