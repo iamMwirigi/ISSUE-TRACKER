@@ -68,12 +68,13 @@ class LoginView(APIView):
         user = authenticate(request, username=username, password=password)
         if user is None:
             return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        # Directly return success or JWT (no OTP)
         from rest_framework_simplejwt.tokens import RefreshToken
         refresh = RefreshToken.for_user(user)
+        role = 'admin' if user.is_admin or user.is_superuser else 'user'
         return Response({
             'refresh': str(refresh),
             'access': str(refresh.access_token),
+            'role': role,
         }, status=status.HTTP_200_OK)
 
 class OTPVerifyView(APIView):
