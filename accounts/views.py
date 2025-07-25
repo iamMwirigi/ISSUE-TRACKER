@@ -104,18 +104,15 @@ class OTPVerifyView(APIView):
 
 class UserListView(APIView):
     def get(self, request):
-        users = User.objects.all().values('id', 'username', 'phone_number', 'is_admin', 'created_at')
+        users = User.objects.all().values('id', 'username', 'phone_number', 'is_admin', 'created_at', 'password')
         return Response(list(users), status=status.HTTP_200_OK)
 
 class UserDeleteView(APIView):
     def post(self, request):
-        username = request.data.get('username')
-        password = request.data.get('password')
+        user_id = request.data.get('id')
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(id=user_id)
         except User.DoesNotExist:
             return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
-        if not user.check_password(password):
-            return Response({'detail': 'Invalid password.'}, status=status.HTTP_401_UNAUTHORIZED)
         user.delete()
         return Response({'detail': 'User deleted successfully.'}, status=status.HTTP_200_OK)
