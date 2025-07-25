@@ -145,5 +145,9 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
-    "https://issue-tracker-psi-ten.vercel.app/",
+    "https://your-app-name.vercel.app",  # Replace with your actual Vercel domain
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
 ]
