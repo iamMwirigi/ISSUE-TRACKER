@@ -41,6 +41,100 @@
 
 ---
 
+# Offices Endpoints
+
+All endpoints require the `Authorization: Bearer <access_token>` header.
+
+## Create an Office
+- **POST** `/api/offices/create/`
+- **Body:**
+  ```json
+  {
+    "name": "Main Office",
+    "location": "Nairobi, Kenya"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "id": "<office_id>",
+    "name": "Main Office",
+    "location": "Nairobi, Kenya",
+    "created_at": "2025-07-25T...",
+    "message": "Office created successfully."
+  }
+  ```
+
+## List Offices
+- **GET** `/api/offices/list/`
+- **Response:**
+  ```json
+  [
+    {
+      "id": "<office_id>",
+      "name": "Main Office",
+      "location": "Nairobi, Kenya",
+      "created_at": "2025-07-25T..."
+    },
+    {
+      "id": "<office_id>",
+      "name": "Branch Office",
+      "location": "Mombasa, Kenya",
+      "created_at": "2025-07-25T..."
+    }
+  ]
+  ```
+
+## Retrieve an Office
+- **POST** `/api/offices/retrieve/`
+- **Body:**
+  ```json
+  { "id": "<office_id>" }
+  ```
+- **Response:**
+  ```json
+  {
+    "id": "<office_id>",
+    "name": "Main Office",
+    "location": "Nairobi, Kenya",
+    "created_at": "2025-07-25T..."
+  }
+  ```
+
+## Update an Office
+- **POST** `/api/offices/update/`
+- **Body:**
+  ```json
+  {
+    "id": "<office_id>",
+    "name": "Updated Office Name",
+    "location": "Updated Location"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "id": "<office_id>",
+    "name": "Updated Office Name",
+    "location": "Updated Location",
+    "created_at": "2025-07-25T...",
+    "message": "Office updated successfully."
+  }
+  ```
+
+## Delete an Office
+- **POST** `/api/offices/delete/`
+- **Body:**
+  ```json
+  { "id": "<office_id>" }
+  ```
+- **Response:**
+  ```json
+  { "message": "Office deleted successfully." }
+  ```
+
+---
+
 # Services Endpoints
 
 All endpoints require the `Authorization: Bearer <access_token>` header.

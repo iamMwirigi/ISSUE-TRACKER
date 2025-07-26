@@ -127,7 +127,8 @@ class UserSerializer(serializers.ModelSerializer):
 class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Office
-        fields = ['id', 'name', 'location']
+        fields = ['id', 'name', 'location', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
 class ServiceSerializer(serializers.ModelSerializer):
     created_by = UserSerializer(read_only=True)
@@ -153,13 +154,18 @@ class IssueCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        # Handle both JSON and multipart form data
-        data = request.data.copy()
-        files = request.FILES
-        
-        # If there are files, add them to the data
-        if files:
-            data['attachments'] = files.get('attachments')
+        # Check if this is a multipart request (file upload) or JSON
+        if request.content_type and 'multipart/form-data' in request.content_type:
+            # Handle multipart form data for file uploads
+            data = request.data.copy()
+            files = request.FILES
+            
+            # If there are files, add them to the data
+            if files:
+                data['attachments'] = files.get('attachments')
+        else:
+            # Handle JSON data
+            data = request.data
         
         serializer = IssueSerializer(data=data)
         if serializer.is_valid():
@@ -253,3 +259,67 @@ class ServiceDeleteView(APIView):
             return Response({'detail': 'Service not found.'}, status=status.HTTP_404_NOT_FOUND)
         service.delete()
         return Response({'message': 'Service deleted successfully.'}, status=status.HTTP_200_OK)
+
+class OfficeCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        serializer = OfficeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'id': serializer.data['id'],
+                'name': serializer.data['name'],
+                'location': serializer.data['location'],
+                'created_at': serializer.data['created_at'],
+                'message': 'Office created successfully.'
+            }, status=status.HTTP_201_CREATED)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class OfficeListView(APIView):
+    permission_classes = [IsAuthenticated]
+    def get(self, request):
+        offices = Office.objects.all()
+        serializer = OfficeSerializer(offices, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class OfficeRetrieveView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        office_id = request.data.get('id')
+        try:
+            office = Office.objects.get(id=office_id)
+        except Office.DoesNotExist:
+            return Response({'detail': 'Office not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = OfficeSerializer(office)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class OfficeUpdateView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        office_id = request.data.get('id')
+        try:
+            office = Office.objects.get(id=office_id)
+        except Office.DoesNotExist:
+            return Response({'detail': 'Office not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = OfficeSerializer(office, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'id': serializer.data['id'],
+                'name': serializer.data['name'],
+                'location': serializer.data['location'],
+                'created_at': serializer.data['created_at'],
+                'message': 'Office updated successfully.'
+            }, status=status.HTTP_200_OK)
+        return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+class OfficeDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request):
+        office_id = request.data.get('id')
+        try:
+            office = Office.objects.get(id=office_id)
+        except Office.DoesNotExist:
+            return Response({'detail': 'Office not found.'}, status=status.HTTP_404_NOT_FOUND)
+        office.delete()
+        return Response({'message': 'Office deleted successfully.'}, status=status.HTTP_200_OK)
