@@ -16,8 +16,8 @@ CREATE TABLE offices (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create 'projects' table
-CREATE TABLE projects (
+-- Create 'services' table (renamed from projects)
+CREATE TABLE services (
     id CHAR(36) PRIMARY KEY,
     name VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
@@ -26,14 +26,17 @@ CREATE TABLE projects (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create 'issues' table
+-- Create 'issues' table (updated schema)
 CREATE TABLE issues (
     id CHAR(36) PRIMARY KEY,
-    title VARCHAR(150) NOT NULL,
+    type VARCHAR(150) NOT NULL,
     description TEXT,
-    status VARCHAR(50) DEFAULT 'open',
+    status VARCHAR(50) DEFAULT 'unsolved',
     priority VARCHAR(50) DEFAULT 'medium',
     reporter_id CHAR(36) REFERENCES users(id) ON DELETE SET NULL,
-    project_id CHAR(36) REFERENCES projects(id) ON DELETE CASCADE,
+    service_id CHAR(36) REFERENCES services(id) ON DELETE CASCADE,
+    office_id CHAR(36) REFERENCES offices(id) ON DELETE SET NULL,
+    assigned_to_id CHAR(36) REFERENCES users(id) ON DELETE SET NULL,
+    attachments VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

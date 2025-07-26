@@ -131,12 +131,9 @@ class OfficeSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 class ServiceSerializer(serializers.ModelSerializer):
-    created_by = UserSerializer(read_only=True)
-    office = OfficeSerializer(read_only=True)
-    
     class Meta:
         model = Service
-        fields = ['id', 'name', 'description', 'created_by', 'office', 'created_at']
+        fields = ['id', 'name', 'description', 'created_at']
         read_only_fields = ['id', 'created_at']
 
 class IssueSerializer(serializers.ModelSerializer):
@@ -149,6 +146,12 @@ class IssueSerializer(serializers.ModelSerializer):
         model = Issue
         fields = ['id', 'type', 'description', 'status', 'reporter', 'service', 'office', 'assigned_to', 'attachments', 'created_at']
         read_only_fields = ['id', 'created_at', 'reporter']
+
+class IssueCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Issue
+        fields = ['id', 'type', 'description', 'status', 'service', 'office', 'assigned_to', 'attachments', 'created_at']
+        read_only_fields = ['id', 'created_at']
 
 class IssueCreateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -167,20 +170,22 @@ class IssueCreateView(APIView):
             # Handle JSON data
             data = request.data
         
-        serializer = IssueSerializer(data=data)
+        serializer = IssueCreateSerializer(data=data)
         if serializer.is_valid():
-            serializer.save(reporter=request.user)
+            issue = serializer.save(reporter=request.user)
+            # Use the read serializer for response
+            response_serializer = IssueSerializer(issue)
             return Response({
-                'id': serializer.data['id'],
-                'type': serializer.data['type'],
-                'description': serializer.data['description'],
-                'status': serializer.data['status'],
-                'reporter': serializer.data['reporter'],
-                'service': serializer.data['service'],
-                'office': serializer.data['office'],
-                'assigned_to': serializer.data['assigned_to'],
-                'attachments': serializer.data.get('attachments'),
-                'created_at': serializer.data['created_at'],
+                'id': response_serializer.data['id'],
+                'type': response_serializer.data['type'],
+                'description': response_serializer.data['description'],
+                'status': response_serializer.data['status'],
+                'reporter': response_serializer.data['reporter'],
+                'service': response_serializer.data['service'],
+                'office': response_serializer.data['office'],
+                'assigned_to': response_serializer.data['assigned_to'],
+                'attachments': response_serializer.data.get('attachments'),
+                'created_at': response_serializer.data['created_at'],
                 'message': 'Issue created successfully.'
             }, status=status.HTTP_201_CREATED)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
@@ -202,8 +207,6 @@ class ServiceCreateView(APIView):
                 'id': serializer.data['id'],
                 'name': serializer.data['name'],
                 'description': serializer.data['description'],
-                'created_by': serializer.data['created_by'],
-                'office': serializer.data['office'],
                 'created_at': serializer.data['created_at'],
                 'message': 'Service created successfully.'
             }, status=status.HTTP_201_CREATED)
@@ -242,8 +245,6 @@ class ServiceUpdateView(APIView):
                 'id': serializer.data['id'],
                 'name': serializer.data['name'],
                 'description': serializer.data['description'],
-                'created_by': serializer.data['created_by'],
-                'office': serializer.data['office'],
                 'created_at': serializer.data['created_at'],
                 'message': 'Service updated successfully.'
             }, status=status.HTTP_200_OK)
