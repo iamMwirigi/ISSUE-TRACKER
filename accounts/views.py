@@ -119,7 +119,31 @@ class UserDeleteView(APIView):
         user.delete()
         return Response({'detail': 'User deleted successfully.'}, status=status.HTTP_200_OK)
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'phone_number']
+
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = ['id', 'name', 'location']
+
+class ServiceSerializer(serializers.ModelSerializer):
+    created_by = UserSerializer(read_only=True)
+    office = OfficeSerializer(read_only=True)
+    
+    class Meta:
+        model = Service
+        fields = ['id', 'name', 'description', 'created_by', 'office', 'created_at']
+        read_only_fields = ['id', 'created_at']
+
 class IssueSerializer(serializers.ModelSerializer):
+    reporter = UserSerializer(read_only=True)
+    service = ServiceSerializer(read_only=True)
+    office = OfficeSerializer(read_only=True)
+    assigned_to = UserSerializer(read_only=True)
+    
     class Meta:
         model = Issue
         fields = ['id', 'type', 'description', 'status', 'reporter', 'service', 'office', 'assigned_to', 'attachments', 'created_at']
@@ -145,6 +169,7 @@ class IssueCreateView(APIView):
                 'type': serializer.data['type'],
                 'description': serializer.data['description'],
                 'status': serializer.data['status'],
+                'reporter': serializer.data['reporter'],
                 'service': serializer.data['service'],
                 'office': serializer.data['office'],
                 'assigned_to': serializer.data['assigned_to'],
@@ -157,25 +182,22 @@ class IssueCreateView(APIView):
 class IssueListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        issues = Issue.objects.all().values('id', 'type', 'description', 'status', 'reporter', 'service', 'office', 'assigned_to', 'attachments', 'created_at')
-        return Response(list(issues), status=status.HTTP_200_OK)
-
-class ServiceSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Service
-        fields = ['id', 'name', 'description', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        issues = Issue.objects.select_related('reporter', 'service', 'office', 'assigned_to').all()
+        serializer = IssueSerializer(issues, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ServiceCreateView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         serializer = ServiceSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(created_by=request.user)
             return Response({
                 'id': serializer.data['id'],
                 'name': serializer.data['name'],
                 'description': serializer.data['description'],
+                'created_by': serializer.data['created_by'],
+                'office': serializer.data['office'],
                 'created_at': serializer.data['created_at'],
                 'message': 'Service created successfully.'
             }, status=status.HTTP_201_CREATED)
@@ -184,15 +206,16 @@ class ServiceCreateView(APIView):
 class ServiceListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        services = Service.objects.all().values('id', 'name', 'description', 'created_at')
-        return Response(list(services), status=status.HTTP_200_OK)
+        services = Service.objects.select_related('created_by', 'office').all()
+        serializer = ServiceSerializer(services, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class ServiceRetrieveView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         service_id = request.data.get('id')
         try:
-            service = Service.objects.get(id=service_id)
+            service = Service.objects.select_related('created_by', 'office').get(id=service_id)
         except Service.DoesNotExist:
             return Response({'detail': 'Service not found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = ServiceSerializer(service)
@@ -203,7 +226,7 @@ class ServiceUpdateView(APIView):
     def post(self, request):
         service_id = request.data.get('id')
         try:
-            service = Service.objects.get(id=service_id)
+            service = Service.objects.select_related('created_by', 'office').get(id=service_id)
         except Service.DoesNotExist:
             return Response({'detail': 'Service not found.'}, status=status.HTTP_404_NOT_FOUND)
         serializer = ServiceSerializer(service, data=request.data, partial=True)
@@ -213,6 +236,8 @@ class ServiceUpdateView(APIView):
                 'id': serializer.data['id'],
                 'name': serializer.data['name'],
                 'description': serializer.data['description'],
+                'created_by': serializer.data['created_by'],
+                'office': serializer.data['office'],
                 'created_at': serializer.data['created_at'],
                 'message': 'Service updated successfully.'
             }, status=status.HTTP_200_OK)
