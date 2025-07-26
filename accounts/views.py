@@ -8,10 +8,11 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User, Issue, Project
+from .models import User, Office, Service, Issue
 import phonenumbers
 from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
+import uuid
 
 # In-memory OTP store (for demo; use cache/redis in prod)
 otp_store = {}
@@ -121,23 +122,33 @@ class UserDeleteView(APIView):
 class IssueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Issue
-        fields = ['id', 'title', 'description', 'status', 'reporter', 'project', 'assigned_to', 'created_at']
+        fields = ['id', 'type', 'description', 'status', 'reporter', 'service', 'office', 'assigned_to', 'attachments', 'created_at']
         read_only_fields = ['id', 'created_at', 'reporter']
 
 class IssueCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = IssueSerializer(data=request.data)
+        # Handle both JSON and multipart form data
+        data = request.data.copy()
+        files = request.FILES
+        
+        # If there are files, add them to the data
+        if files:
+            data['attachments'] = files.get('attachments')
+        
+        serializer = IssueSerializer(data=data)
         if serializer.is_valid():
             serializer.save(reporter=request.user)
             return Response({
                 'id': serializer.data['id'],
-                'title': serializer.data['title'],
+                'type': serializer.data['type'],
                 'description': serializer.data['description'],
                 'status': serializer.data['status'],
-                'project': serializer.data['project'],
+                'service': serializer.data['service'],
+                'office': serializer.data['office'],
                 'assigned_to': serializer.data['assigned_to'],
+                'attachments': serializer.data.get('attachments'),
                 'created_at': serializer.data['created_at'],
                 'message': 'Issue created successfully.'
             }, status=status.HTTP_201_CREATED)
@@ -146,19 +157,19 @@ class IssueCreateView(APIView):
 class IssueListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        issues = Issue.objects.all().values('id', 'title', 'description', 'status', 'reporter', 'project', 'assigned_to', 'created_at')
+        issues = Issue.objects.all().values('id', 'type', 'description', 'status', 'reporter', 'service', 'office', 'assigned_to', 'attachments', 'created_at')
         return Response(list(issues), status=status.HTTP_200_OK)
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ServiceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Project
+        model = Service
         fields = ['id', 'name', 'description', 'created_at']
         read_only_fields = ['id', 'created_at']
 
-class ProjectCreateView(APIView):
+class ServiceCreateView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        serializer = ProjectSerializer(data=request.data)
+        serializer = ServiceSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -166,36 +177,36 @@ class ProjectCreateView(APIView):
                 'name': serializer.data['name'],
                 'description': serializer.data['description'],
                 'created_at': serializer.data['created_at'],
-                'message': 'Project created successfully.'
+                'message': 'Service created successfully.'
             }, status=status.HTTP_201_CREATED)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-class ProjectListView(APIView):
+class ServiceListView(APIView):
     permission_classes = [IsAuthenticated]
     def get(self, request):
-        projects = Project.objects.all().values('id', 'name', 'description', 'created_at')
-        return Response(list(projects), status=status.HTTP_200_OK)
+        services = Service.objects.all().values('id', 'name', 'description', 'created_at')
+        return Response(list(services), status=status.HTTP_200_OK)
 
-class ProjectRetrieveView(APIView):
+class ServiceRetrieveView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        project_id = request.data.get('id')
+        service_id = request.data.get('id')
         try:
-            project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            return Response({'detail': 'Project not found.'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = ProjectSerializer(project)
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return Response({'detail': 'Service not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ServiceSerializer(service)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-class ProjectUpdateView(APIView):
+class ServiceUpdateView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        project_id = request.data.get('id')
+        service_id = request.data.get('id')
         try:
-            project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            return Response({'detail': 'Project not found.'}, status=status.HTTP_404_NOT_FOUND)
-        serializer = ProjectSerializer(project, data=request.data, partial=True)
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return Response({'detail': 'Service not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = ServiceSerializer(service, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -203,17 +214,17 @@ class ProjectUpdateView(APIView):
                 'name': serializer.data['name'],
                 'description': serializer.data['description'],
                 'created_at': serializer.data['created_at'],
-                'message': 'Project updated successfully.'
+                'message': 'Service updated successfully.'
             }, status=status.HTTP_200_OK)
         return Response({'errors': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
-class ProjectDeleteView(APIView):
+class ServiceDeleteView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
-        project_id = request.data.get('id')
+        service_id = request.data.get('id')
         try:
-            project = Project.objects.get(id=project_id)
-        except Project.DoesNotExist:
-            return Response({'detail': 'Project not found.'}, status=status.HTTP_404_NOT_FOUND)
-        project.delete()
-        return Response({'message': 'Project deleted successfully.'}, status=status.HTTP_200_OK)
+            service = Service.objects.get(id=service_id)
+        except Service.DoesNotExist:
+            return Response({'detail': 'Service not found.'}, status=status.HTTP_404_NOT_FOUND)
+        service.delete()
+        return Response({'message': 'Service deleted successfully.'}, status=status.HTTP_200_OK)

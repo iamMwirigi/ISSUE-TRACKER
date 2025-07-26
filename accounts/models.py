@@ -48,7 +48,7 @@ class Office(models.Model):
     def __str__(self):
         return self.name
 
-class Project(models.Model):
+class Service(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
@@ -70,14 +70,16 @@ class Issue(models.Model):
         ('high', 'High'),
     ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=150)
+    type = models.CharField(max_length=150)
     description = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='unsolved')
     priority = models.CharField(max_length=50, choices=PRIORITY_CHOICES, default='medium')
-    reporter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+    reporter = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reported_issues')
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    office = models.ForeignKey(Office, on_delete=models.SET_NULL, null=True, blank=True)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_issues')
+    attachments = models.FileField(upload_to='issue_attachments/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.title
+        return self.type

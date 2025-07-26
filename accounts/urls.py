@@ -1,7 +1,8 @@
 from django.urls import path
 from .views import (
-    LoginView, OTPVerifyView, UserRegistrationView, UserDeleteView, UserListView, IssueCreateView, IssueListView,
-    ProjectCreateView, ProjectListView, ProjectRetrieveView, ProjectUpdateView, ProjectDeleteView
+    UserRegistrationView, LoginView, OTPVerifyView, UserDeleteView, UserListView,
+    IssueCreateView, IssueListView, ServiceCreateView, ServiceListView, 
+    ServiceRetrieveView, ServiceUpdateView, ServiceDeleteView
 )
 
 urlpatterns = [
@@ -13,10 +14,10 @@ urlpatterns = [
     path('issues/create/', IssueCreateView.as_view(), name='create-issue'),
     path('issues/list/', IssueListView.as_view(), name='list-issues'),
 
-    # Project endpoints with /projects/ prefix
-    path('projects/create/', ProjectCreateView.as_view(), name='create-project'),
-    path('projects/list/', ProjectListView.as_view(), name='list-projects'),
-    path('projects/retrieve/', ProjectRetrieveView.as_view(), name='retrieve-project'),
-    path('projects/update/', ProjectUpdateView.as_view(), name='update-project'),
-    path('projects/delete/', ProjectDeleteView.as_view(), name='delete-project'),
+    # Service endpoints with /services/ prefix
+    path('services/create/', ServiceCreateView.as_view(), name='create-service'),
+    path('services/list/', ServiceListView.as_view(), name='list-services'),
+    path('services/retrieve/', ServiceRetrieveView.as_view(), name='retrieve-service'),
+    path('services/update/', ServiceUpdateView.as_view(), name='update-service'),
+    path('services/delete/', ServiceDeleteView.as_view(), name='delete-service'),
 ] 

@@ -41,67 +41,67 @@
 
 ---
 
-# Projects Endpoints
+# Services Endpoints
 
 All endpoints require the `Authorization: Bearer <access_token>` header.
 
-## Create a Project
-- **POST** `/api/projects/create/`
+## Create a Service
+- **POST** `/api/services/create/`
 - **Body:**
   ```json
   {
-    "name": "Project Name",
-    "description": "Project description"
+    "name": "Service Name",
+    "description": "Service description"
   }
   ```
 - **Response:**
   ```json
   {
-    "id": "<project_id>",
-    "name": "Project Name",
-    "description": "Project description",
+    "id": "<service_id>",
+    "name": "Service Name",
+    "description": "Service description",
     "created_at": "2025-07-25T...",
-    "message": "Project created successfully."
+    "message": "Service created successfully."
   }
   ```
 
-## List Projects
-- **GET** `/api/projects/list/`
+## List Services
+- **GET** `/api/services/list/`
 - **Response:**
   ```json
   [
     {
-      "id": "<project_id>",
-      "name": "Project Name",
-      "description": "Project description",
+      "id": "<service_id>",
+      "name": "Service Name",
+      "description": "Service description",
       "created_at": "2025-07-25T..."
     },
     ...
   ]
   ```
 
-## Retrieve a Project
-- **POST** `/api/projects/retrieve/`
+## Retrieve a Service
+- **POST** `/api/services/retrieve/`
 - **Body:**
   ```json
-  { "id": "<project_id>" }
+  { "id": "<service_id>" }
   ```
 - **Response:**
   ```json
   {
-    "id": "<project_id>",
-    "name": "Project Name",
-    "description": "Project description",
+    "id": "<service_id>",
+    "name": "Service Name",
+    "description": "Service description",
     "created_at": "2025-07-25T..."
   }
   ```
 
-## Update a Project
-- **POST** `/api/projects/update/`
+## Update a Service
+- **POST** `/api/services/update/`
 - **Body:**
   ```json
   {
-    "id": "<project_id>",
+    "id": "<service_id>",
     "name": "New Name",
     "description": "Updated description"
   }
@@ -109,23 +109,23 @@ All endpoints require the `Authorization: Bearer <access_token>` header.
 - **Response:**
   ```json
   {
-    "id": "<project_id>",
+    "id": "<service_id>",
     "name": "New Name",
     "description": "Updated description",
     "created_at": "2025-07-25T...",
-    "message": "Project updated successfully."
+    "message": "Service updated successfully."
   }
   ```
 
-## Delete a Project
-- **POST** `/api/projects/delete/`
+## Delete a Service
+- **POST** `/api/services/delete/`
 - **Body:**
   ```json
-  { "id": "<project_id>" }
+  { "id": "<service_id>" }
   ```
 - **Response:**
   ```json
-  { "message": "Project deleted successfully." }
+  { "message": "Service deleted successfully." }
   ```
 
 ---
@@ -136,25 +136,29 @@ All endpoints require the `Authorization: Bearer <access_token>` header.
 
 ## Create an Issue
 - **POST** `/api/issues/create/`
-- **Body:**
+- **Body (FormData for file upload):**
   ```json
   {
-    "title": "Printer not working",
+    "type": "Printer Issue",
     "description": "The office printer is jammed.",
     "status": "unsolved", // or "solved"
-    "project": "<project_id>",
-    "assigned_to": "<user_id>" // optional
+    "service": "<service_id>",
+    "office": "<office_id>", // optional
+    "assigned_to": "<user_id>", // optional
+    "attachments": "<file>" // optional - supports images, documents, etc.
   }
   ```
 - **Response:**
   ```json
   {
     "id": "<issue_id>",
-    "title": "Printer not working",
+    "type": "Printer Issue",
     "description": "The office printer is jammed.",
     "status": "unsolved",
-    "project": "<project_id>",
+    "service": "<service_id>",
+    "office": "<office_id>",
     "assigned_to": "<user_id>",
+    "attachments": "/media/issue_attachments/filename.jpg",
     "created_at": "2025-07-25T...",
     "message": "Issue created successfully."
   }
@@ -167,12 +171,14 @@ All endpoints require the `Authorization: Bearer <access_token>` header.
   [
     {
       "id": "<issue_id>",
-      "title": "Printer not working",
+      "type": "Printer Issue",
       "description": "The office printer is jammed.",
       "status": "unsolved",
       "reporter": "<user_id>",
-      "project": "<project_id>",
+      "service": "<service_id>",
+      "office": "<office_id>",
       "assigned_to": "<user_id>",
+      "attachments": "/media/issue_attachments/filename.jpg",
       "created_at": "2025-07-25T..."
     },
     ...
@@ -185,4 +191,6 @@ All endpoints require the `Authorization: Bearer <access_token>` header.
 - Always use the correct field values (e.g., `status` must be "solved" or "unsolved").
 - All endpoints require a valid JWT access token in the `Authorization` header.
 - Use the returned `id` from create/list endpoints for retrieve, update, and delete.
+- For file uploads, use FormData instead of JSON and include the file in the `attachments` field.
+- Supported file types: images (jpg, png, gif), documents (pdf, doc, docx), and other common formats.
 - If you get an error, check the response for details and make sure your request matches the documented format. 
